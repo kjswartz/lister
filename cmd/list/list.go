@@ -11,7 +11,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// addCmd represents the add command
+type ListItem struct {
+	ID          int
+	Description string
+}
+
+// ListCmd represents the list command
 var ListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "list",
@@ -83,20 +88,20 @@ func listFunc(cmd *cobra.Command, args []string) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Items in %s list\n", listName)
+	fmt.Printf("  Items in %s list\n", listName)
 	for _, item := range listItems {
-		fmt.Println("	", item)
+		fmt.Printf("    %d | %s\n", item.ID, item.Description)
 	}
 }
 
-func findListItems(db *sql.DB, listID int) ([]string, error) {
+func findListItems(db *sql.DB, listID int) ([]ListItem, error) {
 	rows, err := db.Query("SELECT id, description FROM list_items WHERE list_id = ?", listID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying list items for list ID '%d': %v", listID, err)
 	}
 	defer rows.Close()
 
-	listItems := []string{}
+	listItems := []ListItem{}
 	for rows.Next() {
 		var (
 			id          int
@@ -105,7 +110,7 @@ func findListItems(db *sql.DB, listID int) ([]string, error) {
 		if err := rows.Scan(&id, &description); err != nil {
 			return nil, fmt.Errorf("error scanning row: %v", err)
 		}
-		listItems = append(listItems, description)
+		listItems = append(listItems, ListItem{ID: id, Description: description})
 	}
 	return listItems, nil
 }
