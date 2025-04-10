@@ -39,16 +39,12 @@ var (
 	listID          int
 	itemDescription string
 	itemID          int
-	// moveUp   bool
-	// moveDown bool
 )
 
 func init() {
 	ListCmd.Flags().IntVarP(&listID, "list", "l", 0, "ID of the list")
-	ListCmd.Flags().IntVarP(&itemID, "id", "i", 0, "ID of the list item")
 	ListCmd.Flags().StringVarP(&itemDescription, "add", "a", "", "Item to add to the list item")
-	// ListCmd.Flags().BoolVarP(&moveUp, "up", "u", false, "Move item up in the list")
-	// ListCmd.Flags().BoolVarP(&moveDown, "down", "d", false, "Move item down in the list")
+	ListCmd.Flags().IntVarP(&itemID, "remove", "r", 0, "ID of the list item to remove")
 }
 
 func listFunc(cmd *cobra.Command, args []string) {
@@ -72,17 +68,27 @@ func listFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	// Handle adding an item to the list if -a flag is provided
 	if itemDescription != "" {
-		// Handle adding an item to a list
-		insertSQL := `INSERT INTO list_items (list_id, description) VALUES (?, ?);`
-		_, err = db.Exec(insertSQL, listID, itemDescription)
+		err := addItemToList(db, listID, itemDescription)
 		if err != nil {
-			fmt.Println("Error adding item:", err)
+			fmt.Println(err)
 			return
 		}
-		fmt.Printf("Added item '%s' to list with ID %d\n", itemDescription, listID)
+		fmt.Printf("Added item '%s' to list '%s'\n", itemDescription, listName)
 	}
 
+	// Handle removing an item from the list if -r flag is provided
+	if itemID != 0 {
+		_, err := db.Exec("DELETE FROM list_items WHERE id = ? AND list_id = ?", itemID, listID)
+		if err != nil {
+			fmt.Printf("Error removing item with ID '%d' from list '%s': %v\n", itemID, listName, err)
+			return
+		}
+		fmt.Printf("Removed item with ID '%d' from list '%s'\n", itemID, listName)
+	}
+
+	// List all items in the list passed in via -l flag
 	listItems, err := findListItems(db, listID)
 	if err != nil {
 		fmt.Println(err)
@@ -94,8 +100,17 @@ func listFunc(cmd *cobra.Command, args []string) {
 	}
 }
 
+func addItemToList(db *sql.DB, listID int, description string) error {
+	insertSQL := `INSERT INTO list_items (list_id, description) VALUES (?, ?);`
+	_, err := db.Exec(insertSQL, listID, description)
+	if err != nil {
+		return fmt.Errorf("error inserting item into list: %v", err)
+	}
+	return nil
+}
+
 func findListItems(db *sql.DB, listID int) ([]ListItem, error) {
-	rows, err := db.Query("SELECT id, description FROM list_items WHERE list_id = ?", listID)
+	rows, err := db.Query("SELECT id, description FROM list_items WHERE list_id = ? ORDER BY description ASC", listID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying list items for list ID '%d': %v", listID, err)
 	}
