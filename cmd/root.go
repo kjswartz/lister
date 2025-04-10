@@ -32,7 +32,6 @@ func init() {
 	cobra.OnInitialize(initDB)
 	rootCmd.AddCommand(addCmd)
 	rootCmd.AddCommand(list.ListCmd)
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 func initDB() {
@@ -57,7 +56,6 @@ func initDB() {
 	createTableListItemsSQL := `CREATE TABLE IF NOT EXISTS list_items (
 		"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		"list_id" INTEGER NOT NULL,
-		"position" INTEGER NOT NULL,
 		"description" TEXT NOT NULL
   );`
 
