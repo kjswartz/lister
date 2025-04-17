@@ -6,6 +6,7 @@ package list
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	"github.com/kjswartz/lister/pkg/utils"
 	"github.com/spf13/cobra"
@@ -36,20 +37,19 @@ var ListCmd = &cobra.Command{
 }
 
 var (
-	listID          int
 	itemDescription string
 	itemID          int
 )
 
 func init() {
-	ListCmd.Flags().IntVarP(&listID, "list", "l", 0, "ID of the list")
 	ListCmd.Flags().StringVarP(&itemDescription, "add", "a", "", "Item to add to the list item")
 	ListCmd.Flags().IntVarP(&itemID, "remove", "r", 0, "ID of the list item to remove")
 }
 
 func listFunc(cmd *cobra.Command, args []string) {
-	if listID == 0 {
-		fmt.Println("No list ID provided.")
+	listID, err := strconv.Atoi(args[0])
+	if err != nil {
+		fmt.Println("Invalid list ID provided. It must be an integer.")
 		return
 	}
 
