@@ -23,15 +23,13 @@ var ListCmd = &cobra.Command{
 	Short: "list",
 	Long: `List commands for managing list items.
 		
-	Available Commands:
-		add 		Add items to a list.
-		remove 	Remove items from a list.
-		move 		Move an item within a list.
+	Available Flags:
+		--add    |-a 	Add items to a list.
+		--remove |-r 	Remove items from a list.
 
 	For example:
-		lister list add -l 123 -n "read a book".
-		lister list remove -l 123 -i 456.
-		lister list move -l 123 -i 456 (-u|-d).
+		lister list 123 -a "read a book".
+		lister list 123 -r 456.
 `,
 	Run: listFunc,
 }
@@ -110,7 +108,7 @@ func addItemToList(db *sql.DB, listID int, description string) error {
 }
 
 func findListItems(db *sql.DB, listID int) ([]ListItem, error) {
-	rows, err := db.Query("SELECT id, description FROM list_items WHERE list_id = ? ORDER BY description ASC", listID)
+	rows, err := db.Query("SELECT id, description FROM list_items WHERE list_id = ? ORDER BY id ASC", listID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying list items for list ID '%d': %v", listID, err)
 	}
